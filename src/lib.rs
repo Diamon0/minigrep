@@ -52,10 +52,8 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let contents = fs::read_to_string(config.file_path)?;
     
     let results = if config.options.contains(&"ci".to_string()) {
-        println!("AAA");
         search_case_insensitive(&config.query, &contents)
     } else {
-        println!("BBB");
         search(&config.query, &contents)
     };
 
