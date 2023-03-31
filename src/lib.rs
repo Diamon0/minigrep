@@ -1,11 +1,10 @@
-use std::env;
 use std::error::Error;
 use std::fs;
 
 pub struct Config {
     pub query: String,
     pub file_path: String,
-    pub ignore_case: bool,
+    pub options: Vec<String>,
 }
 
 impl Config {
@@ -15,22 +14,36 @@ impl Config {
 
         args.next();
 
-        let query = match args.next() {
-            Some(arg) => arg,
-            None => return Err("Didn't get a query string"),
-        };
+        let col_args: Vec<String> = args.collect();
 
-        let file_path = match args.next() {
-            Some(arg) => arg,
-            None => return Err("Didn't get a file path"),
-        };
+        let mut options: Vec<String> = Vec::new();
+        let mut query: String = String::new();
+        let mut file_path: String = String::new();
 
-        let ignore_case = env::var("IGNORE_CASE").is_ok();
+        for arg in col_args {
+            if arg.starts_with('-') {
+                options.push(arg[1..].to_string());
+
+            } else if arg.ends_with(".txt") {
+                file_path = arg;
+
+            } else {
+                query = arg;
+            }
+        }
+
+        if query.is_empty() {
+            return Err("Didn't get a query string");
+        }
+
+        if file_path.is_empty() {
+            return Err("Didn't get a file path");
+        }
 
         Ok(Config { 
             query, 
             file_path,
-            ignore_case,
+            options,
         })
     }
 }
@@ -38,9 +51,11 @@ impl Config {
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let contents = fs::read_to_string(config.file_path)?;
     
-    let results = if config.ignore_case {
+    let results = if config.options.contains(&"ci".to_string()) {
+        println!("AAA");
         search_case_insensitive(&config.query, &contents)
     } else {
+        println!("BBB");
         search(&config.query, &contents)
     };
 
